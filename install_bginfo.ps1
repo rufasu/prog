@@ -1,63 +1,63 @@
 # ===============================================
 # install_bginfo.ps1
-# Автоматическая установка BgInfo с созданием задач
-# Поддержка локальной и удалённой сессии
-# Русская локализация Windows
+# РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° BgInfo СЃ СЃРѕР·РґР°РЅРёРµРј Р·Р°РґР°С‡
+# РџРѕРґРґРµСЂР¶РєР° Р»РѕРєР°Р»СЊРЅРѕР№ Рё СѓРґР°Р»С‘РЅРЅРѕР№ СЃРµСЃСЃРёРё
+# Р СѓСЃСЃРєР°СЏ Р»РѕРєР°Р»РёР·Р°С†РёСЏ Windows
 # ===============================================
 
-# --- 1. Проверка прав администратора ---
+# --- 1. РџСЂРѕРІРµСЂРєР° РїСЂР°РІ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° ---
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if (-not $IsAdmin) {
-    Write-Host "Требуются права администратора. Перезапуск..." -ForegroundColor Yellow
+    Write-Host "РўСЂРµР±СѓСЋС‚СЃСЏ РїСЂР°РІР° Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°. РџРµСЂРµР·Р°РїСѓСЃРє..." -ForegroundColor Yellow
     Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
-# --- 2. Настройки установки ---
+# --- 2. РќР°СЃС‚СЂРѕР№РєРё СѓСЃС‚Р°РЅРѕРІРєРё ---
 $bginfoUrl      = "https://download.sysinternals.com/files/BGInfo.zip"
 $bginfoPath     = "C:\programs\bginfo"
 $bginfoExePath  = "$bginfoPath\bginfo.exe"
 $configUrl      = "https://raw.githubusercontent.com/rufasu/prog/refs/heads/main/bgconfig.bgi"
 $configPath     = "$bginfoPath\bgconfig.bgi"
 
-# --- 3. Настройки планировщика ---
-$SchedulerMode  = "AllUsers"   # Возможные значения: SYSTEM, User, UserWithPass, AllUsers
-$TaskUser       = ""           # Имя пользователя для User/UserWithPass
-$TaskPassword   = ""           # Пароль для UserWithPass (оставить пустым для User)
+# --- 3. РќР°СЃС‚СЂРѕР№РєРё РїР»Р°РЅРёСЂРѕРІС‰РёРєР° ---
+$SchedulerMode  = "AllUsers"   # Р’РѕР·РјРѕР¶РЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ: SYSTEM, User, UserWithPass, AllUsers
+$TaskUser       = ""           # РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РґР»СЏ User/UserWithPass
+$TaskPassword   = ""           # РџР°СЂРѕР»СЊ РґР»СЏ UserWithPass (РѕСЃС‚Р°РІРёС‚СЊ РїСѓСЃС‚С‹Рј РґР»СЏ User)
 
-# --- 4. Создание папки установки ---
+# --- 4. РЎРѕР·РґР°РЅРёРµ РїР°РїРєРё СѓСЃС‚Р°РЅРѕРІРєРё ---
 if (-not (Test-Path $bginfoPath)) {
     New-Item -ItemType Directory -Path $bginfoPath -Force | Out-Null
-    Write-Host "Создана папка $bginfoPath" -ForegroundColor Green
+    Write-Host "РЎРѕР·РґР°РЅР° РїР°РїРєР° $bginfoPath" -ForegroundColor Green
 }
 
-# --- 5. Скачивание и распаковка BgInfo ---
+# --- 5. РЎРєР°С‡РёРІР°РЅРёРµ Рё СЂР°СЃРїР°РєРѕРІРєР° BgInfo ---
 $tempZip = "$env:TEMP\BgInfo.zip"
 try {
-    Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
+    Write-Host "РЎРєР°С‡РёРІР°РµРј BgInfo..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -ErrorAction Stop
-    Write-Host "Распаковываем BgInfo..." -ForegroundColor Cyan
+    Write-Host "Р Р°СЃРїР°РєРѕРІС‹РІР°РµРј BgInfo..." -ForegroundColor Cyan
     Expand-Archive -Path $tempZip -DestinationPath $bginfoPath -Force
     Remove-Item -Path $tempZip -Force
-    Write-Host "BgInfo успешно скачан и распакован." -ForegroundColor Green
+    Write-Host "BgInfo СѓСЃРїРµС€РЅРѕ СЃРєР°С‡Р°РЅ Рё СЂР°СЃРїР°РєРѕРІР°РЅ." -ForegroundColor Green
 } catch {
-    Write-Host "Ошибка загрузки BgInfo: $_" -ForegroundColor Red
+    Write-Host "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё BgInfo: $_" -ForegroundColor Red
     Pause
     exit 1
 }
 
-# --- 6. Скачивание конфигурационного файла ---
+# --- 6. РЎРєР°С‡РёРІР°РЅРёРµ РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅРѕРіРѕ С„Р°Р№Р»Р° ---
 try {
-    Write-Host "Скачиваем конфигурационный файл..." -ForegroundColor Cyan
+    Write-Host "РЎРєР°С‡РёРІР°РµРј РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅС‹Р№ С„Р°Р№Р»..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $configUrl -OutFile $configPath -ErrorAction Stop
-    Write-Host "Конфигурация загружена: $configPath" -ForegroundColor Green
+    Write-Host "РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ Р·Р°РіСЂСѓР¶РµРЅР°: $configPath" -ForegroundColor Green
 } catch {
-    Write-Host "Ошибка загрузки конфига: $_" -ForegroundColor Red
+    Write-Host "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РєРѕРЅС„РёРіР°: $_" -ForegroundColor Red
     Pause
     exit 1
 }
 
-# --- 7. Создание задачи в планировщике ---
+# --- 7. РЎРѕР·РґР°РЅРёРµ Р·Р°РґР°С‡Рё РІ РїР»Р°РЅРёСЂРѕРІС‰РёРєРµ ---
 try {
     $action   = New-ScheduledTaskAction -Execute $bginfoExePath -Argument "$configPath /timer:0 /NOLICPROMPT /silent"
     $trigger1 = New-ScheduledTaskTrigger -AtLogOn
@@ -76,11 +76,11 @@ try {
                                    -Settings $settings `
                                    -RunLevel Highest `
                                    -Force -ErrorAction Stop
-            Write-Host "Задача создана от SYSTEM." -ForegroundColor Green
+            Write-Host "Р—Р°РґР°С‡Р° СЃРѕР·РґР°РЅР° РѕС‚ SYSTEM." -ForegroundColor Green
         }
 
         "User" {
-            if ([string]::IsNullOrWhiteSpace($TaskUser)) { throw "Не задано имя пользователя для режима User." }
+            if ([string]::IsNullOrWhiteSpace($TaskUser)) { throw "РќРµ Р·Р°РґР°РЅРѕ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РґР»СЏ СЂРµР¶РёРјР° User." }
             Register-ScheduledTask -TaskName "BgInfo AutoRun" `
                                    -Action $action `
                                    -Trigger $trigger1, $trigger2 `
@@ -88,12 +88,12 @@ try {
                                    -RunLevel Highest `
                                    -User $TaskUser `
                                    -Force -ErrorAction Stop
-            Write-Host "Задача создана для пользователя $TaskUser (без пароля)." -ForegroundColor Green
+            Write-Host "Р—Р°РґР°С‡Р° СЃРѕР·РґР°РЅР° РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ $TaskUser (Р±РµР· РїР°СЂРѕР»СЏ)." -ForegroundColor Green
         }
 
         "UserWithPass" {
             if ([string]::IsNullOrWhiteSpace($TaskUser) -or [string]::IsNullOrWhiteSpace($TaskPassword)) {
-                throw "Не задано имя пользователя или пароль для режима UserWithPass."
+                throw "РќРµ Р·Р°РґР°РЅРѕ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РёР»Рё РїР°СЂРѕР»СЊ РґР»СЏ СЂРµР¶РёРјР° UserWithPass."
             }
             Register-ScheduledTask -TaskName "BgInfo AutoRun" `
                                    -Action $action `
@@ -103,16 +103,16 @@ try {
                                    -User $TaskUser `
                                    -Password $TaskPassword `
                                    -Force -ErrorAction Stop
-            Write-Host "Задача создана для пользователя $TaskUser с паролем." -ForegroundColor Green
+            Write-Host "Р—Р°РґР°С‡Р° СЃРѕР·РґР°РЅР° РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ $TaskUser СЃ РїР°СЂРѕР»РµРј." -ForegroundColor Green
         }
 
         "AllUsers" {
-            Write-Host "Создаём задачи для всех локальных пользователей (Администраторы или Пользователи)..." -ForegroundColor Cyan
+            Write-Host "РЎРѕР·РґР°С‘Рј Р·Р°РґР°С‡Рё РґР»СЏ РІСЃРµС… Р»РѕРєР°Р»СЊРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ (РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹ РёР»Рё РџРѕР»СЊР·РѕРІР°С‚РµР»Рё)..." -ForegroundColor Cyan
 
-            $blockedUsers = @("СИСТЕМА","LOCAL SERVICE","NETWORK SERVICE","Гость","Default","Public")
-            $allowedGroups = @("Администраторы","Пользователи")
+            $blockedUsers = @("РЎРРЎРўР•РњРђ","LOCAL SERVICE","NETWORK SERVICE","Р“РѕСЃС‚СЊ","Default","Public")
+            $allowedGroups = @("РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹","РџРѕР»СЊР·РѕРІР°С‚РµР»Рё")
 
-            # Получаем всех пользователей из реестра профилей
+            # РџРѕР»СѓС‡Р°РµРј РІСЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ РёР· СЂРµРµСЃС‚СЂР° РїСЂРѕС„РёР»РµР№
             $profileKeys = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
             foreach ($key in $profileKeys) {
                 try {
@@ -122,18 +122,18 @@ try {
 
                     if ($blockedUsers -contains $userOnly) { continue }
 
-                    # Проверка членства пользователя через ADSI
+                    # РџСЂРѕРІРµСЂРєР° С‡Р»РµРЅСЃС‚РІР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ С‡РµСЂРµР· ADSI
                     try {
                         $adsiUser = [ADSI]"WinNT://$env:COMPUTERNAME/$userOnly,user"
                         $userGroups = @($adsiUser.Groups() | ForEach-Object { $_.GetType().InvokeMember("Name",'GetProperty',$null,$_,$null) })
-                        $isAllowed = ($userGroups -contains "Администраторы") -or ($userGroups -contains "Пользователи")
+                        $isAllowed = ($userGroups -contains "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹") -or ($userGroups -contains "РџРѕР»СЊР·РѕРІР°С‚РµР»Рё")
                     } catch {
                         $isAllowed = $false
                     }
 
                     if ($isAllowed) {
                         $taskName = "BgInfo AutoRun_" + $userOnly
-                        Write-Host ("Создаём задачу для пользователя " + $userOnly) -ForegroundColor Cyan
+                        Write-Host ("РЎРѕР·РґР°С‘Рј Р·Р°РґР°С‡Сѓ РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ " + $userOnly) -ForegroundColor Cyan
                         try {
                             Register-ScheduledTask -TaskName $taskName `
                                                    -Action $action `
@@ -143,29 +143,29 @@ try {
                                                    -User $usernameFull `
                                                    -Force -ErrorAction Stop
                         } catch {
-                            Write-Host ("Пропущена задача для " + $userOnly + ": " + $_) -ForegroundColor Yellow
+                            Write-Host ("РџСЂРѕРїСѓС‰РµРЅР° Р·Р°РґР°С‡Р° РґР»СЏ " + $userOnly + ": " + $_) -ForegroundColor Yellow
                         }
                     } else {
-                        Write-Host ("Пользователь " + $userOnly + " пропущен (не входит в разрешённые группы)") -ForegroundColor DarkYellow
+                        Write-Host ("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ " + $userOnly + " РїСЂРѕРїСѓС‰РµРЅ (РЅРµ РІС…РѕРґРёС‚ РІ СЂР°Р·СЂРµС€С‘РЅРЅС‹Рµ РіСЂСѓРїРїС‹)") -ForegroundColor DarkYellow
                     }
 
                 } catch {
-                    Write-Host ("Ошибка обработки пользователя " + $userOnly + ": " + $_) -ForegroundColor Yellow
+                    Write-Host ("РћС€РёР±РєР° РѕР±СЂР°Р±РѕС‚РєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ " + $userOnly + ": " + $_) -ForegroundColor Yellow
                 }
             }
         }
 
-        default { throw "Неверный режим SchedulerMode: $SchedulerMode" }
+        default { throw "РќРµРІРµСЂРЅС‹Р№ СЂРµР¶РёРј SchedulerMode: $SchedulerMode" }
     }
 
-    # --- 8. Немедленный запуск BgInfo ---
+    # --- 8. РќРµРјРµРґР»РµРЅРЅС‹Р№ Р·Р°РїСѓСЃРє BgInfo ---
     Start-Process -FilePath $bginfoExePath -ArgumentList "$configPath /timer:0 /NOLICPROMPT /silent"
-    Write-Host "BgInfo запущен сразу после установки." -ForegroundColor Green
+    Write-Host "BgInfo Р·Р°РїСѓС‰РµРЅ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ СѓСЃС‚Р°РЅРѕРІРєРё." -ForegroundColor Green
 
 } catch {
-    Write-Host ("Ошибка создания задачи в планировщике: " + $_) -ForegroundColor Red
+    Write-Host ("РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ Р·Р°РґР°С‡Рё РІ РїР»Р°РЅРёСЂРѕРІС‰РёРєРµ: " + $_) -ForegroundColor Red
 }
 
-# --- 9. Пауза для интерактивной проверки ---
-Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
+# --- 9. РџР°СѓР·Р° РґР»СЏ РёРЅС‚РµСЂР°РєС‚РёРІРЅРѕР№ РїСЂРѕРІРµСЂРєРё ---
+Write-Host "`nРќР°Р¶РјРёС‚Рµ Р»СЋР±СѓСЋ РєР»Р°РІРёС€Сѓ РґР»СЏ РІС‹С…РѕРґР°..." -ForegroundColor Yellow
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
