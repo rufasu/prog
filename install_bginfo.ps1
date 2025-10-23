@@ -168,7 +168,8 @@ try {
 }
 
 # --- 9. Пауза для интерактивной проверки ---
-Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
-$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+# Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
+#$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
 
 
