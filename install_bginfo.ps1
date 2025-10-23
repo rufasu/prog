@@ -32,7 +32,7 @@ if (-not (Test-Path $bginfoPath)) {
 }
 
 # --- 5. Скачивание и распаковка BgInfo ---
-$tempZip = "$env:TEMP\BgInfo.zip"
+$tempZip = "C:\windows\TEMP\BgInfo.zip"
 try {
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -ErrorAction Stop
@@ -169,3 +169,4 @@ try {
 # --- 9. Пауза для интерактивной проверки ---
 Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
