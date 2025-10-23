@@ -5,10 +5,10 @@
 # Русская локализация Windows
 # ===============================================
 
-# Глобальная настройка TLS для всех запросов (fallback, если Schannel ок)
+# Глобальная настройка TLS для всех запросов (портативно, без реестра)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# Helper-функция: Скачивание с retry (IWR -> WebClient)
+# Helper-функция: Скачивание с retry (IWR -> WebClient, без реестра)
 function Download-FileWithRetry {
     param(
         [string]$Uri,
@@ -23,16 +23,10 @@ function Download-FileWithRetry {
     } catch {
         Write-Host "IWR провал: $($_.Exception.Message). Переход на WebClient..." -ForegroundColor Yellow
         try {
-            # Попытка 2: WebClient (fallback, с User-Agent)
+            # Попытка 2: WebClient (fallback, с User-Agent для sysinternals/GitHub)
             $wc = New-Object System.Net.WebClient
             $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-            if ($Uri -match '\.zip|\.bgi$') {
-                # Бинарный файл (ZIP/.bgi)
-                $wc.DownloadFile($Uri, $OutFile)
-            } else {
-                # Текст (если нужно, но здесь не используется)
-                $wc.DownloadString($Uri) | Out-File -FilePath $OutFile -Encoding UTF8
-            }
+            $wc.DownloadFile($Uri, $OutFile)
             Write-Host "Скачано через WebClient." -ForegroundColor Green
         } catch {
             Write-Host "WebClient провал: $($_.Exception.Message)" -ForegroundColor Red
@@ -68,7 +62,7 @@ if (-not (Test-Path $bginfoPath)) {
 }
 
 # --- 5. Скачивание и распаковка BgInfo ---
-$tempZip = "$env:TEMP\BgInfo.zip"
+$tempZip = "C:\windows\TEMP\BgInfo.zip"
 try {
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
     Download-FileWithRetry -Uri $bginfoUrl -OutFile $tempZip
@@ -78,7 +72,8 @@ try {
     Write-Host "BgInfo успешно скачан и распакован." -ForegroundColor Green
 } catch {
     Write-Host "Ошибка загрузки BgInfo: $_" -ForegroundColor Red
-    Pause
+    # Pause закомментировано для автоматизации
+    # Pause
     exit 1
 }
 
@@ -89,7 +84,8 @@ try {
     Write-Host "Конфигурация загружена: $configPath" -ForegroundColor Green
 } catch {
     Write-Host "Ошибка загрузки конфига: $_" -ForegroundColor Red
-    Pause
+    # Pause закомментировано
+    # Pause
     exit 1
 }
 
