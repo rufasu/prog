@@ -17,7 +17,7 @@ if (-not $IsAdmin) {
 $bginfoUrl      = "https://download.sysinternals.com/files/BGInfo.zip"
 $bginfoPath     = "C:\programs\bginfo"
 $bginfoExePath  = "$bginfoPath\bginfo.exe"
-$configUrl      = "https://raw.githubusercontent.com/rufasu/prog/refs/heads/main/bgconfig.bgi"
+$configUrl      = "https://raw.githubusercontent.com/rufasu/prog/main/bgconfig.bgi"
 $configPath     = "$bginfoPath\bgconfig.bgi"
 
 # --- 3. Настройки планировщика ---
@@ -34,8 +34,9 @@ if (-not (Test-Path $bginfoPath)) {
 # --- 5. Скачивание и распаковка BgInfo ---
 $tempZip = "C:\windows\TEMP\BgInfo.zip"
 try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
-    Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -ErrorAction Stop
+    Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -UseBasicParsing -ErrorAction Stop
     Write-Host "Распаковываем BgInfo..." -ForegroundColor Cyan
     Expand-Archive -Path $tempZip -DestinationPath $bginfoPath -Force
     Remove-Item -Path $tempZip -Force
@@ -49,7 +50,7 @@ try {
 # --- 6. Скачивание конфигурационного файла ---
 try {
     Write-Host "Скачиваем конфигурационный файл..." -ForegroundColor Cyan
-    Invoke-WebRequest -Uri $configUrl -OutFile $configPath -ErrorAction Stop
+    Invoke-WebRequest -Uri $configUrl -OutFile $configPath -UseBasicParsing -ErrorAction Stop
     Write-Host "Конфигурация загружена: $configPath" -ForegroundColor Green
 } catch {
     Write-Host "Ошибка загрузки конфига: $_" -ForegroundColor Red
@@ -169,4 +170,5 @@ try {
 # --- 9. Пауза для интерактивной проверки ---
 Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
 
