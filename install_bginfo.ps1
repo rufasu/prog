@@ -5,8 +5,41 @@
 # Русская локализация Windows
 # ===============================================
 
-# Глобальная настройка TLS для всех запросов
+# Глобальная настройка TLS для всех запросов (fallback, если Schannel ок)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Helper-функция: Скачивание с retry (IWR -> WebClient)
+function Download-FileWithRetry {
+    param(
+        [string]$Uri,
+        [string]$OutFile,
+        [switch]$UseBasicParsing = $true
+    )
+    try {
+        # Попытка 1: Invoke-WebRequest (с TLS и BasicParsing)
+        Write-Host "Попытка скачивания через Invoke-WebRequest..." -ForegroundColor Gray
+        Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing:$UseBasicParsing -ErrorAction Stop
+        Write-Host "Скачано через IWR." -ForegroundColor Gray
+    } catch {
+        Write-Host "IWR провал: $($_.Exception.Message). Переход на WebClient..." -ForegroundColor Yellow
+        try {
+            # Попытка 2: WebClient (fallback, с User-Agent)
+            $wc = New-Object System.Net.WebClient
+            $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+            if ($Uri -match '\.zip|\.bgi$') {
+                # Бинарный файл (ZIP/.bgi)
+                $wc.DownloadFile($Uri, $OutFile)
+            } else {
+                # Текст (если нужно, но здесь не используется)
+                $wc.DownloadString($Uri) | Out-File -FilePath $OutFile -Encoding UTF8
+            }
+            Write-Host "Скачано через WebClient." -ForegroundColor Green
+        } catch {
+            Write-Host "WebClient провал: $($_.Exception.Message)" -ForegroundColor Red
+            throw $_
+        }
+    }
+}
 
 # --- 1. Проверка прав администратора ---
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
@@ -35,10 +68,10 @@ if (-not (Test-Path $bginfoPath)) {
 }
 
 # --- 5. Скачивание и распаковка BgInfo ---
-$tempZip = "C:\windows\TEMP\BgInfo.zip"
+$tempZip = "$env:TEMP\BgInfo.zip"
 try {
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
-    Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -UseBasicParsing -ErrorAction Stop
+    Download-FileWithRetry -Uri $bginfoUrl -OutFile $tempZip
     Write-Host "Распаковываем BgInfo..." -ForegroundColor Cyan
     Expand-Archive -Path $tempZip -DestinationPath $bginfoPath -Force
     Remove-Item -Path $tempZip -Force
@@ -52,7 +85,7 @@ try {
 # --- 6. Скачивание конфигурационного файла ---
 try {
     Write-Host "Скачиваем конфигурационный файл..." -ForegroundColor Cyan
-    Invoke-WebRequest -Uri $configUrl -OutFile $configPath -UseBasicParsing -ErrorAction Stop
+    Download-FileWithRetry -Uri $configUrl -OutFile $configPath
     Write-Host "Конфигурация загружена: $configPath" -ForegroundColor Green
 } catch {
     Write-Host "Ошибка загрузки конфига: $_" -ForegroundColor Red
@@ -93,7 +126,7 @@ try {
                                    -Force -ErrorAction Stop
             Write-Host "Задача создана для пользователя $TaskUser (без пароля)." -ForegroundColor Green
         }
-        
+
         "UserWithPass" {
             if ([string]::IsNullOrWhiteSpace($TaskUser) -or [string]::IsNullOrWhiteSpace($TaskPassword)) {
                 throw "Не задано имя пользователя или пароль для режима UserWithPass."
@@ -169,10 +202,6 @@ try {
     Write-Host ("Ошибка создания задачи в планировщике: " + $_) -ForegroundColor Red
 }
 
-# --- 9. Пауза для интерактивной проверки ---
+# --- 9. Пауза для интерактивной проверки (закомментировано для автоматизации) ---
 # Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
-#$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-
-
-
-
+# $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
