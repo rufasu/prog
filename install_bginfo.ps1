@@ -65,6 +65,7 @@ if (-not (Test-Path $bginfoPath)) {
 $tempZip = "C:\windows\TEMP\BgInfo.zip"
 try {
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
+
     Download-FileWithRetry -Uri $bginfoUrl -OutFile $tempZip
     Write-Host "Распаковываем BgInfo..." -ForegroundColor Cyan
     Expand-Archive -Path $tempZip -DestinationPath $bginfoPath -Force
@@ -80,6 +81,7 @@ try {
 # --- 6. Скачивание конфигурационного файла ---
 try {
     Write-Host "Скачиваем конфигурационный файл..." -ForegroundColor Cyan
+
     Download-FileWithRetry -Uri $configUrl -OutFile $configPath
     Write-Host "Конфигурация загружена: $configPath" -ForegroundColor Green
 } catch {
@@ -122,6 +124,7 @@ try {
                                    -Force -ErrorAction Stop
             Write-Host "Задача создана для пользователя $TaskUser (без пароля)." -ForegroundColor Green
         }
+
 
         "UserWithPass" {
             if ([string]::IsNullOrWhiteSpace($TaskUser) -or [string]::IsNullOrWhiteSpace($TaskPassword)) {
@@ -198,6 +201,9 @@ try {
     Write-Host ("Ошибка создания задачи в планировщике: " + $_) -ForegroundColor Red
 }
 
+
 # --- 9. Пауза для интерактивной проверки (закомментировано для автоматизации) ---
 # Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
 # $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
+
