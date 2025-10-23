@@ -5,6 +5,9 @@
 # Русская локализация Windows
 # ===============================================
 
+# Глобальная настройка TLS для всех запросов
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # --- 1. Проверка прав администратора ---
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if (-not $IsAdmin) {
@@ -34,7 +37,6 @@ if (-not (Test-Path $bginfoPath)) {
 # --- 5. Скачивание и распаковка BgInfo ---
 $tempZip = "C:\windows\TEMP\BgInfo.zip"
 try {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
     Invoke-WebRequest -Uri $bginfoUrl -OutFile $tempZip -UseBasicParsing -ErrorAction Stop
     Write-Host "Распаковываем BgInfo..." -ForegroundColor Cyan
@@ -91,7 +93,7 @@ try {
                                    -Force -ErrorAction Stop
             Write-Host "Задача создана для пользователя $TaskUser (без пароля)." -ForegroundColor Green
         }
-
+        
         "UserWithPass" {
             if ([string]::IsNullOrWhiteSpace($TaskUser) -or [string]::IsNullOrWhiteSpace($TaskPassword)) {
                 throw "Не задано имя пользователя или пароль для режима UserWithPass."
@@ -170,6 +172,7 @@ try {
 # --- 9. Пауза для интерактивной проверки ---
 # Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
 #$null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
 
 
 
