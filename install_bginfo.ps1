@@ -5,35 +5,6 @@
 # Русская локализация Windows
 # ===============================================
 
-# Глобальная настройка TLS для всех запросов (портативно, без реестра)
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-# Helper-функция: Скачивание с retry (IWR -> WebClient, без реестра)
-function Download-FileWithRetry {
-    param(
-        [string]$Uri,
-        [string]$OutFile,
-        [switch]$UseBasicParsing = $true
-    )
-    try {
-        # Попытка 1: Invoke-WebRequest (с TLS и BasicParsing)
-        Write-Host "Попытка скачивания через Invoke-WebRequest..." -ForegroundColor Gray
-        Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing:$UseBasicParsing -ErrorAction Stop
-        Write-Host "Скачано через IWR." -ForegroundColor Gray
-    } catch {
-        Write-Host "IWR провал: $($_.Exception.Message). Переход на WebClient..." -ForegroundColor Yellow
-        try {
-            # Попытка 2: WebClient (fallback, с User-Agent для sysinternals/GitHub)
-            $wc = New-Object System.Net.WebClient
-            $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-            $wc.DownloadFile($Uri, $OutFile)
-            Write-Host "Скачано через WebClient." -ForegroundColor Green
-        } catch {
-            Write-Host "WebClient провал: $($_.Exception.Message)" -ForegroundColor Red
-            throw $_
-        }
-    }
-}
 
 # --- 1. Проверка прав администратора ---
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
@@ -63,6 +34,35 @@ if (-not (Test-Path $bginfoPath)) {
 
 # --- 5. Скачивание и распаковка BgInfo ---
 $tempZip = "C:\windows\TEMP\BgInfo.zip"
+# Глобальная настройка TLS для всех запросов (портативно, без реестра)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Helper-функция: Скачивание с retry (IWR -> WebClient, без реестра)
+function Download-FileWithRetry {
+    param(
+        [string]$Uri,
+        [string]$OutFile,
+        [switch]$UseBasicParsing = $true
+    )
+    try {
+        # Попытка 1: Invoke-WebRequest (с TLS и BasicParsing)
+        Write-Host "Попытка скачивания через Invoke-WebRequest..." -ForegroundColor Gray
+        Invoke-WebRequest -Uri $Uri -OutFile $OutFile -UseBasicParsing:$UseBasicParsing -ErrorAction Stop
+        Write-Host "Скачано через IWR." -ForegroundColor Gray
+    } catch {
+        Write-Host "IWR провал: $($_.Exception.Message). Переход на WebClient..." -ForegroundColor Yellow
+        try {
+            # Попытка 2: WebClient (fallback, с User-Agent для sysinternals/GitHub)
+            $wc = New-Object System.Net.WebClient
+            $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+            $wc.DownloadFile($Uri, $OutFile)
+            Write-Host "Скачано через WebClient." -ForegroundColor Green
+        } catch {
+            Write-Host "WebClient провал: $($_.Exception.Message)" -ForegroundColor Red
+            throw $_
+        }
+    }
+}
 try {
     Write-Host "Скачиваем BgInfo..." -ForegroundColor Cyan
 
@@ -205,6 +205,7 @@ try {
 # --- 9. Пауза для интерактивной проверки (закомментировано для автоматизации) ---
 # Write-Host "`nНажмите любую клавишу для выхода..." -ForegroundColor Yellow
 # $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+
 
 
 
